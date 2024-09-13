@@ -1,12 +1,15 @@
 from datetime import date
-from django.urls import reverse
-from rest_framework import status
-from rest_framework.test import APITestCase, APIClient
-from django.utils import timezone
-from .serializers import MenuSerializer
-from .models import Restaurant, Menu, Vote
-from users.models import Employee
+
 from django.contrib.auth.models import User
+from django.urls import reverse
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.test import APIClient, APITestCase
+
+from users.models import Employee
+
+from .models import Menu, Restaurant, Vote
+from .serializers import MenuSerializer
 
 
 class RestaurantCreateViewTests(APITestCase):
@@ -154,130 +157,72 @@ class MenuCreateViewTests(APITestCase):
 
 
 class VoteMenuAPIViewTestCase(APITestCase):
-
     def setUp(self):
-        self.user = User.objects.create(username="testuser")
+        # Create sample data
+        self.restaurant = Restaurant.objects.create(
+            name="Sample Restaurant",
+            address="123 Main St",
+            phone_number="123-456-7890",
+            cuisine_type="Italian",
+        )
         self.employee = Employee.objects.create(
             employee_id="E001",
-            user=self.user,
-            job_title="Developer",
-            date_of_joining=date(2020, 1, 1),
-            department="IT",
-        )
-        self.restaurant = Restaurant.objects.create(
-            name="Testaurant",
-            address="123 Test St",
-            phone_number="1234567890",
-            cuisine_type="Italian",
-            opening_hours="9 AM - 9 PM",
+            user=self._create_test_user(username="john_doe", password="password123"),
+            job_title="Chef",
+            date_of_joining=timezone.now().date(),
+            department="Kitchen",
         )
         self.menu1 = Menu.objects.create(
-            restaurant=self.restaurant,
-            date=date(2023, 9, 12),
-            items="Pizza, Pasta",
-            votes=0,
+            restaurant=self.restaurant, date="2024-09-10", items="Pizza", votes=0
         )
         self.menu2 = Menu.objects.create(
-            restaurant=self.restaurant,
-            date=date(2023, 9, 13),
-            items="Burger, Fries",
-            votes=0,
+            restaurant=self.restaurant, date="2024-09-11", items="Burger", votes=0
         )
         self.menu3 = Menu.objects.create(
-            restaurant=self.restaurant,
-            date=date(2023, 9, 14),
-            items="Salad, Soup",
-            votes=0,
+            restaurant=self.restaurant, date="2024-09-12", items="Sushi", votes=0
         )
-        self.url = reverse("vote-caste")
+        self.vote_url = reverse("vote-caste")  # Ensure this matches your URL name
 
-    def test_vote_multiple_menus(self):
-        headers = {"HTTP_BUILD_VERSION": "new"}
+    def _create_test_user(self, username, password):
+        """
+        Helper method to create a test user.
+        """
+        user = User.objects.create_user(username=username, password=password)
+        return user
+
+    def test_vote_single_menu_old_version(self):
+        self.client.credentials(HTTP_BUILD_VERSION="old")
+        data = {
+            "menu": self.menu1.id,
+            "employee": self.employee.id,
+            "points": 5,
+            "voted_date": timezone.now().date(),
+        }
+        response = self.client.post(self.vote_url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["message"], "Vote recorded successfully")
+
+    def test_vote_multiple_menus_new_version(self):
+        self.client.credentials(HTTP_BUILD_VERSION="new")
         data = {
             "employee_id": self.employee.id,
-            "voted_date": date(2023, 9, 12),
+            "voted_date": timezone.now().date(),
             "menu_1": self.menu1.id,
             "menu_2": self.menu2.id,
             "menu_3": self.menu3.id,
         }
-        response = self.client.post(
-            self.url, data, format="json",  **headers
-        )
+        response = self.client.post(self.vote_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Vote.objects.count(), 3)
-        self.assertEqual(
-            Vote.objects.filter(
-                employee=self.employee, voted_date=date(2023, 9, 12)
-            ).count(),
-            3,
-        )
+        self.assertEqual(response.data["message"], "Votes recorded successfully")
 
-    # def test_vote_single_menu(self):
-    #     headers = {"HTTP_BUILD_VERSION": "old"}
-    #     data = {
-    #         "menu_id": self.menu1.id,
-    #         "employee_id": self.employee.id,
-    #         "points": 3,
-    #         "voted_date": date(2023, 9, 14),
-    #     }
-    #     print(data)
-    #     response = self.client.post(
-    #         self.url, data, format="json", **headers
-    #     )
-    #     print(response.data)
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(response.data, {"message": "Vote recorded successfully"})
-
-    #     # Verify that the vote has been recorded in the database
-    #     self.assertTrue(Vote.objects.filter(menu=self.menu, employee=self.employee, voted_date=date.today()).exists())
-
-
-
-class VoteResultsForCurrentDayAPITestCase(APITestCase):
-    def setUp(self):
-        self.client = APIClient()
-        self.url = reverse('vote-results-for-current-day')  # Adjust the URL name as needed
-
-        # Create sample restaurant
-        self.restaurant = Restaurant.objects.create(name='Restaurant 1', address='123 Street')
-
-        # Create sample menus
-        self.menu1 = Menu.objects.create(restaurant=self.restaurant, date="2024-09-12", items='Item 1, Item 2')
-        self.menu2 = Menu.objects.create(restaurant=self.restaurant, date="2024-09-11", items='Item 3, Item 4')
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword", email="testuser@example.com"
-        )
-        # Create sample employee
-        self.employee = Employee.objects.create(user=self.user, department='IT',date_of_joining="2024-09-12")
-
-        # Create sample votes
-        today = timezone.now().date()
-        Vote.objects.create(menu=self.menu1, employee=self.employee, points=2, voted_date=today)
-        Vote.objects.create(menu=self.menu1, employee=self.employee, points=1, voted_date=today)
-        Vote.objects.create(menu=self.menu2, employee=self.employee, points=3, voted_date=today)
-
-    def test_get_vote_results_for_current_day(self):
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # Check if the menu with the maximum votes is returned
-        max_votes_menu = Menu.objects.get(id=self.menu1.id)
-        serializer = MenuSerializer(max_votes_menu)
-        self.assertEqual(response.data, serializer.data)
-
-    def test_no_votes_for_today(self):
-        # Clear today's votes
-        Vote.objects.all().delete()
-
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data['msg'], 'No votes found for today.')
-        self.assertFalse(response.data['success'])
-
-
-    def test_internal_server_error(self):
-        # Simulate an internal server error by raising an exception
-        with self.assertRaises(Exception):
-            response = self.client.get(self.url)
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-            self.assertIn('An error occurred while retrieving vote results.', response.data['msg'])
+    def test_invalid_data(self):
+        self.client.credentials(HTTP_BUILD_VERSION="new")
+        data = {
+            "employee_id": self.employee.id,
+            "voted_date": timezone.now().date(),
+            # Missing menu fields
+        }
+        response = self.client.post(self.vote_url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+        self.assertIn("details", response.data)

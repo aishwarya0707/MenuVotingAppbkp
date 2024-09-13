@@ -7,21 +7,57 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('restaurants', '0003_alter_restaurant_name_vote'),
+        ("restaurants", "0003_alter_restaurant_name_vote"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='RestaurantVote',
+            name="RestaurantVote",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('points_1', models.IntegerField()),
-                ('points_2', models.IntegerField()),
-                ('points_3', models.IntegerField()),
-                ('restaurant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='restaurant_votes', to='restaurants.restaurant')),
-                ('top_menu_1', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='top_menu_1_votes', to='restaurants.menu')),
-                ('top_menu_2', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='top_menu_2_votes', to='restaurants.menu')),
-                ('top_menu_3', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='top_menu_3_votes', to='restaurants.menu')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("points_1", models.IntegerField()),
+                ("points_2", models.IntegerField()),
+                ("points_3", models.IntegerField()),
+                (
+                    "restaurant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="restaurant_votes",
+                        to="restaurants.restaurant",
+                    ),
+                ),
+                (
+                    "top_menu_1",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="top_menu_1_votes",
+                        to="restaurants.menu",
+                    ),
+                ),
+                (
+                    "top_menu_2",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="top_menu_2_votes",
+                        to="restaurants.menu",
+                    ),
+                ),
+                (
+                    "top_menu_3",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="top_menu_3_votes",
+                        to="restaurants.menu",
+                    ),
+                ),
             ],
         ),
     ]

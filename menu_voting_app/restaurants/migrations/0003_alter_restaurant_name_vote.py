@@ -8,22 +8,37 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('restaurants', '0002_menu'),
+        ("restaurants", "0002_menu"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='restaurant',
-            name='name',
+            model_name="restaurant",
+            name="name",
             field=models.CharField(max_length=255, unique=True),
         ),
         migrations.CreateModel(
-            name='Vote',
+            name="Vote",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('points', models.IntegerField()),
-                ('voted_date', models.DateTimeField(default=django.utils.timezone.now)),
-                ('menu', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='votes', to='restaurants.menu')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("points", models.IntegerField()),
+                ("voted_date", models.DateTimeField(default=django.utils.timezone.now)),
+                (
+                    "menu",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="votes",
+                        to="restaurants.menu",
+                    ),
+                ),
             ],
         ),
     ]

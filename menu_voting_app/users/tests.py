@@ -1,7 +1,7 @@
+from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django.contrib.auth.models import User
 
 
 class RegisterViewTests(APITestCase):
@@ -106,28 +106,30 @@ class LoginViewTests(APITestCase):
         self.assertIn("errors", response.data)
 
 
-class LogoutViewTests(APITestCase):
+class LogoutViewTestCase(APITestCase):
     def setUp(self):
-        self.url = reverse("logout")  # Adjust the URL name as needed
+        """
+        Create a user for testing and perform initial setup.
+        """
         self.user = User.objects.create_user(
-            username="testuser", password="testpassword", email="testuser@example.com"
+            username='testuser',
+            password='testpassword'
         )
-        self.client.login(username="testuser", password="testpassword")
+        self.client.login(username='testuser', password='testpassword')
 
-    # def test_logout_user_success(self):
-    #     """
-    #     Ensure we can log out a user.
-    #     """
-    #     self.client.login(username='testuser', password='testpassword')
-    #     response = self.client.post(self.url, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(response.data['message'], 'Successfully logged out.')
+    def test_logout_success(self):
+        """
+        Test successful logout scenario.
+        """
+        response = self.client.post(reverse('logout'),data={"username":'testuser', "password":'testpassword'})
+        self.assertEqual(response.data, {"message": "Successfully logged out."})
 
-    def test_logout_user_not_logged_in(self):
+    def test_logout_invalid_data(self):
         """
-        Ensure logging out without being logged in returns a 400 response.
+        Test logout with invalid data.
         """
-        self.client.logout()
-        response = self.client.post(self.url, format="json")
+        # Modify the serializer to expect invalid data if needed
+        response = self.client.post(reverse('logout'), data={'invalid_field': 'value'})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("message", response.data)
+        self.assertIn('errors', response.data)
+

@@ -12,6 +12,8 @@ WORKDIR /app
 # Install dependencies
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
+RUN pip install isort 
+RUN pip install black
 
 # Copy project
 COPY . .

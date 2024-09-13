@@ -41,7 +41,7 @@ class VoteSerializer(serializers.ModelSerializer):
             "menu",
             "employee",
             "points",
-            "voted_date",
+            # "voted_date",
         ]  # Specifies which fields to include in the serialization.
 
 
@@ -53,7 +53,7 @@ class VoteRequestSerializer(serializers.Serializer):
     employee_id = serializers.PrimaryKeyRelatedField(
         queryset=Employee.objects.all()
     )  # Validate employee ID against Employee model.
-    voted_date = serializers.DateField()  # Validate that voted_date is a valid date.
+    # voted_date = serializers.DateField()  # Validate that voted_date is a valid date.
     menu_1 = serializers.PrimaryKeyRelatedField(
         queryset=Menu.objects.all()
     )  # Validate that menu_1 is a valid Menu instance.

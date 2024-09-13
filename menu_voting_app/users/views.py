@@ -1,15 +1,17 @@
-from django.contrib.auth import login as auth_login, logout
+from django.contrib.auth import login as auth_login
+from django.contrib.auth import logout
 from django.contrib.auth.models import User
-from rest_framework import status, generics
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from .models import Employee
+from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import Employee
 from .serializers import (
-    LoginSerializer,
-    UserSerializer,
     EmployeeSerializer,
+    LoginSerializer,
     LogoutSerializer,
+    UserSerializer,
 )
 
 
@@ -101,73 +103,46 @@ class LogoutView(generics.CreateAPIView):
             )
 
 
-class CreateEmployeeAPIView(generics.CreateAPIView):
-    """
-    Handles the creation of employee records via POST requests.
-    """
-
-    # Define the serializer class used for employee creation
-    serializer_class = EmployeeSerializer
-
-    def perform_create(self, serializer):
-        # Retrieve data from the request
-        data = self.request.data
-        try:
-            # Extract employee details
-            email = data.get("user.email")
-            username = data.get("user.username")
-            employee_id = data.get("employee_id")
-
-            # Check if an employee with the same ID already exists
-            if Employee.objects.filter(employee_id=employee_id).exists():
-                raise ValidationError(f"Employee with ID {employee_id} already exists.")
-
-            # Create or get user profile
-            user_profile, created = User.objects.get_or_create(
-                email=email, username=username
-            )
-
-            # Save the employee record
-            serializer.save(user=user_profile)
-        except Exception as e:
-            # Handle any unexpected errors during employee creation
-            raise ValidationError(f"Error during employee creation: {str(e)}")
-
-    def post(self, request, *args, **kwargs):
-        # Initialize the serializer with request data
-        serializer = self.get_serializer(data=request.data)
-        try:
-            # Validate the serializer
-            if serializer.is_valid():
-                self.perform_create(serializer)  # Perform the creation process
-                headers = self.get_success_headers(serializer.data)
-                return Response(
-                    {
-                        "msg": "Employee successfully created.",
-                        "data": serializer.data,
-                        "success": True,
-                    },
-                    status=status.HTTP_201_CREATED,
-                    headers=headers,
-                )
-            # Return validation errors if the data is invalid
+class CreateEmployeeAPIView(APIView):
+    # serializer_class = EmployeeSerializer
+    def post(self, request):
+        data = request.data
+        print(data)
+        # Check if employee with the given ID already exists
+        employee_id = data.get("employee_id")
+        if employee_id and Employee.objects.filter(employee_id=employee_id).exists():
+            error_message = f"Employee with ID {employee_id} already exists"
             return Response(
-                {
-                    "msg": "Validation failed.",
-                    "errors": serializer.errors,
-                    "success": False,
-                },
+                {"msg": error_message, "success": False},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except ValidationError as e:
-            # Handle validation errors specifically
-            return Response(
-                {"msg": "Validation error occurred.", "errors": str(e)},
-                status=status.HTTP_400_BAD_REQUEST,
+
+        user_data = data.get("user")
+        email = user_data.get("email")
+        username = user_data.get("username")
+        user_profile, created = User.objects.get_or_create(
+            email=email, username=username
+        )
+        user_profile.save()
+
+        try:
+            # Create the employee
+            employee = Employee.objects.create(
+                employee_id=employee_id,
+                user=user_profile,
+                date_of_joining=data.get("date_of_joining")
             )
         except Exception as e:
-            # Handle any unexpected errors during employee creation
+            error_message = f"Failed to create employee: {str(e)}"
             return Response(
-                {"msg": "An error occurred during employee creation.", "error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                {"msg": error_message, "success": False},
+                status=status.HTTP_400_BAD_REQUEST,
             )
+
+        serializer = EmployeeSerializer(employee)
+        response_data = {
+            "msg": "Employee successfully created.",
+            "data": serializer.data,
+            "success": True,
+        }
+        return Response(data=response_data, status=status.HTTP_201_CREATED)

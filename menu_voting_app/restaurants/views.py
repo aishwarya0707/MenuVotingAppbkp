@@ -1,12 +1,13 @@
 from django.db.models import Sum
-from rest_framework import generics, status, versioning
-from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
 from django.utils import timezone
-from .models import Restaurant, Menu, Vote
+from rest_framework import generics, status, versioning
+from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
+
+from .models import Menu, Restaurant, Vote
 from .serializers import (
-    RestaurantSerializer,
     MenuSerializer,
+    RestaurantSerializer,
     VoteRequestSerializer,
     VoteSerializer,
 )
@@ -156,99 +157,68 @@ class MenuDetailView(generics.ListAPIView):
                 Menu.objects.none()
             )  # Return an empty queryset in case of any exceptions.
 
-
-# class VoteMenuAPIView(generics.CreateAPIView):
-#     """
-#     API view to handle voting for menu items, supports different API versions.
-#     """
-
-#       # Defines the serializer class to validate and serialize input data.
-#     versioning_class = (
-#         versioning.AcceptHeaderVersioning
-#     )  # Specifies the versioning class to handle versioned API requests.
-
-#     def post(self, request, *args, **kwargs):
-#         """
-#         Handles POST requests for voting, delegates to the appropriate method based on API version.
-#         """
-#         build_version = request.META.get(
-#             "HTTP_BUILD_VERSION", "old"
-#         )  # Get the API version from request headers.
-
-#         try:
-#             if build_version == "old":
-                
-#                 return self.vote_single_menu(
-#                     request
-#                 )  # Handle voting for a single menu item (old version).
-#             elif build_version == "new":
-                
-#                 return self.vote_multiple_menus(
-#                     request
-#                 )  # Handle voting for multiple menu items (new version).
-#             else:
-#                 return Response(
-#                     {
-#                         "error": "Invalid API version"
-#                     },  # Return error for invalid API version.
-#                     status=status.HTTP_400_BAD_REQUEST,  # HTTP 400 Bad Request status code.
-#                 )
-#         except Exception as e:
-#             return Response(
-#                 {"error": "An error occurred during voting.", "details": str(e)},
-#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,  # HTTP 500 Internal Server Error status code.
-#             )
-
 class VoteMenuAPIView(generics.CreateAPIView):
-    versioning_class = versioning.AcceptHeaderVersioning  # Specifies the versioning class to handle versioned API requests.
+    versioning_class = (
+        versioning.AcceptHeaderVersioning
+    )  # Specifies the versioning class to handle versioned API requests.
 
     def get_serializer_class(self):
         """
         Returns the appropriate serializer class based on the API version.
         """
-        build_version = self.request.META.get("HTTP_BUILD_VERSION","old")  # Get the API version from request headers.
+        build_version = self.request.META.get(
+            "HTTP_BUILD_VERSION"
+        )  # Get the API version from request headers.
 
         if build_version == "old":
             return VoteSerializer  # Use VoteSerializer for 'old' version.
         elif build_version == "new":
             return VoteRequestSerializer  # Use VoteRequestSerializer for 'new' version.
-        # else:
-        #     raise ValueError("Invalid API version")  # Raise error for unsupported API version.
+        return Response(
+            {"error": "Invalid API version"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     def post(self, request, *args, **kwargs):
         """
         Handles POST requests for voting, delegates to the appropriate method based on API version.
         """
-        serializer_class = self.get_serializer_class()  # Get the serializer class based on API version.
-        serializer = serializer_class(data=request.data)  # Initialize serializer with request data.
+        serializer_class = (
+            self.get_serializer_class()
+        )  # Get the serializer class based on API version.
+        serializer = serializer_class(
+            data=request.data
+        )  # Initialize serializer with request data.
 
         if not serializer.is_valid():
             return Response(
                 {"error": "Invalid data", "details": serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST  # HTTP 400 Bad Request status code.
+                status=status.HTTP_400_BAD_REQUEST,  # HTTP 400 Bad Request status code.
             )
 
         try:
             if self.get_serializer_class() == VoteSerializer:
-                return self.vote_single_menu(request, serializer)  # Handle voting for a single menu item (old version).
+                return self.vote_single_menu(
+                    request, serializer
+                )  # Handle voting for a single menu item (old version).
             elif self.get_serializer_class() == VoteRequestSerializer:
-                return self.vote_multiple_menus(request, serializer)  # Handle voting for multiple menu items (new version).
+                return self.vote_multiple_menus(
+                    request, serializer
+                )  # Handle voting for multiple menu items (new version).
             else:
                 return Response(
                     {"error": "Invalid API version"},
-                    status=status.HTTP_400_BAD_REQUEST  # HTTP 400 Bad Request status code.
+                    status=status.HTTP_400_BAD_REQUEST,  # HTTP 400 Bad Request status code.
                 )
         except Exception as e:
             return Response(
                 {"error": "An error occurred during voting.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR  # HTTP 500 Internal Server Error status code.
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,  # HTTP 500 Internal Server Error status code.
             )
 
-    def vote_single_menu(self, request,serializer):
+    def vote_single_menu(self, request, serializer):
         """
         Handles voting for a single menu item.
         """
-        print(request)
         serializer = VoteSerializer(
             data=request.data
         )  # Initialize serializer with request data.
@@ -256,7 +226,7 @@ class VoteMenuAPIView(generics.CreateAPIView):
             try:
                 menu_id = serializer.validated_data["menu"]
                 employee_id = serializer.validated_data["employee"]
-                voted_date = serializer.validated_data["voted_date"]
+                voted_date = timezone.now().date()
 
                 if Vote.objects.filter(
                     menu_id=menu_id, employee_id=employee_id, voted_date=voted_date
@@ -300,7 +270,7 @@ class VoteMenuAPIView(generics.CreateAPIView):
             try:
                 data = serializer.validated_data
                 employee = data["employee_id"]
-                voted_date = data["voted_date"]
+                voted_date = timezone.now().date()
                 menu_1, menu_2, menu_3 = data["menu_1"], data["menu_2"], data["menu_3"]
 
                 # Ensure the employee has not voted already today.
@@ -343,6 +313,8 @@ class VoteMenuAPIView(generics.CreateAPIView):
             },  # Return validation errors.
             status=status.HTTP_400_BAD_REQUEST,  # HTTP 400 Bad Request status code.
         )
+
+
 class VoteResultsForCurrentDayAPIView(generics.GenericAPIView):
     """
     API view to retrieve vote results for the current day.
@@ -376,11 +348,8 @@ class VoteResultsForCurrentDayAPIView(generics.GenericAPIView):
                 # Serialize and return the result.
                 serializer = self.get_serializer(max_votes_menu)
                 return Response(
-                    {
-                        "menu": serializer.data,
-                        "total_votes": total_votes
-                    },
-                    status=status.HTTP_200_OK  # HTTP 200 OK status code.
+                    {"menu": serializer.data, "total_votes": total_votes},
+                    status=status.HTTP_200_OK,  # HTTP 200 OK status code.
                 )
             else:
                 return Response(

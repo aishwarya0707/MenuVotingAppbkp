@@ -17,7 +17,7 @@ o Creating restaurant
 o Uploading menu for restaurant (There should be a menu for each day)
 o Creating employee
 o Getting current day menu
-o Voting for restaurant menu (Old version api accepted one menu, New one accepts top three menus with respective points (1 to 3)
+o Voting for restaurant menu (Old version api accepted one menu, New one accepts top three menus with respective points (1 to 3))
 o Getting results for current day
 
 ### Requirements:
@@ -34,96 +34,111 @@ Usage of Linting and Static typing tools
 
 # Project structure
 
-To ensure reusability, modularity and ease to expanding the codebase the project is divided into three smaller apps.
+The project is divided into 2 smaller apps. They are
+• users - Contains logic related to User login, logout, register, employee creation
+• restaurants - Contains logic related to restaurants, voting and menus
 
-The three modules/apps in this project:
-
-• user_profiles - logic realted to authentication, employee creation
-• restaurants - logic related to restaurants and menus
-• votes - logic related to voting
-
-### User profiles
-
-### Models:
-
-UserProfile
-Employee
-Role
-Organization
-
-### About
-
-- New users can be registered
-- Handles authentication - login, logout using TokenAuthentication
-- Employee can be created
-- Organisation can be created which is used by employee model
-- Role/designation of an employee can be added
-
-Please refer to the API documentation for more details - [User Profile API collection](https://web.postman.co/workspace/8b70aae8-9083-4850-84da-03ed46ce1dc3/api/e2f08a5d-7234-4107-b611-92825c2f102f/documentation/4100828-2f17873e-4d7d-4756-b87c-03e02fe0b276?entity=&branch=&version=)
-
-### Restaurants
-
-### Models:
+### MODELS:
 
 Restaurant
 Menu
-
-### About
-
-- Create a restaurant
-- List restaurants
-- Upload menu for restaurant
-- Update vote for menu which is done by the votes api
-
-Please refer to the API documentation for more usage info - [Restaurant API collection](https://web.postman.co/workspace/8b70aae8-9083-4850-84da-03ed46ce1dc3/api/e2f08a5d-7234-4107-b611-92825c2f102f/collection/4100828-822be501-90b8-460a-a243-6d2effd761c8)
-
-### Votes
-
-#### Models
-
 Vote
+Employee
 
-### About
+### END POINTS:
 
-- Creates the relation between the user profile and restaurants module
-- The model maps votes to Employee and Menu
+- Create a restaurant --> /restaurants/create-restaurant/
+- Uploading menu for restaurant --> /restaurants/upload-menu/
+- vote for restaurant menu using old version api or new version api --> /restaurants/restaurant-votes/
+- Getting results for current day --> /restaurants/current-day-menus/
+- New users can be registered --> /users/register/
+- Users can login --> /users/login/
+- Users can logout --> /users/logout/
+- Employee can be created --> /users/create-employee/
 
-Please refer to the API documentaion - [Vote API collection](https://web.postman.co/workspace/8b70aae8-9083-4850-84da-03ed46ce1dc3/api/e2f08a5d-7234-4107-b611-92825c2f102f/documentation/4100828-c95738f9-33e6-4fa3-ba37-50cdf069e985?entity=&branch=&version=)
+### API Usage for Users:
 
-## Running the project
+https://www.postman.com/technical-cosmologist-79820612/workspace/menuvotingapp/collection/18019390-de270b15-7ff0-424d-bc4d-76227b7e3f38?action=share&creator=18019390
 
-To make running the docker django commands easier a Makefile has been added which has the following commands
+### API Usage for Restaurants:
 
-- `make setup` -Sets up the project: runs build and migrate
-
-- `make build` - Runs docker-compose build
-
-- `make runserver` - Runs the command docker-compose up
-
-- `make makemigrations` - Runs ./manage.py makemigrations
-
-- `make migrate` - Runs ./manage.py migrate
-
-- `make fix-linting` - Prettifies the codebase by running `black .` , `isort .`
-
-There are few more commands added to the Makefile which could be run using the keyword provided before every command
+https://www.postman.com/technical-cosmologist-79820612/workspace/menuvotingapp/collection/18019390-06055f31-652d-435a-97c8-61c1bdf713a2?action=share&creator=18019390
 
 ## To run development server
 
 Follow the below steps
 
-- Setup the project
+- Move the virtual environment and activate it
 
-`make setup`
+`cd .\env\Scripts\`
+`.\activate`
 
 - Create super user
+  `cd ..`
+  `cd .\menu_voting_app\`
+  `python manage.py createsuperuser`
 
-`make createsuperuser`
+- Run the server
 
-- Run the project
-
-`make runserver`
+`python manage.py runserver`
 
 - Run tests
 
-`make test`
+`coverage run manage.py test`
+
+# Build the Docker image
+
+docker-compose build
+
+# Run the Docker containers
+
+docker-compose up
+
+# Run the Docker containers in detached mode
+
+runserver-detached:
+docker-compose up -d
+
+# Stop the Docker containers
+
+down:
+docker-compose down
+
+# Restart the Docker containers
+
+restart:
+docker-compose restart
+
+# Access the Django shell
+
+docker-compose run web python manage.py shell
+
+# Apply database migrations
+
+docker-compose run web python manage.py makemigrations
+
+# Apply database migrations
+
+docker-compose run web python manage.py migrate
+
+# Run tests
+
+test:
+docker-compose run web python manage.py test
+
+# Generate code coverage report
+
+docker-compose run web coverage run --source='.' manage.py test
+docker-compose run web coverage report
+
+# createsuperuser:
+
+docker-compose run --rm web ./manage.py createsuperuser
+
+# To fix linting
+
+docker-compose run --rm web black .
+
+# To static typing
+
+docker-compose run --rm web isort .

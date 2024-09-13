@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Restaurant, Menu, Vote
+from .models import Menu, Restaurant, Vote
 
 # Register your models here.
 
@@ -12,14 +12,7 @@ from .models import Restaurant, Menu, Vote
 
 class RestaurantAdmin(admin.ModelAdmin):
 
-    list_display = (
-        "id",
-        "name",
-        "cuisine_type",
-        "phone_number",
-        "address",
-        "opening_hours",
-    )
+    list_display = ("id", "name", "cuisine_type", "phone_number", "address")
 
 
 class MenuAdmin(admin.ModelAdmin):
@@ -35,14 +28,6 @@ class VoteAdmin(admin.ModelAdmin):
     date_hierarchy = "voted_date"
     ordering = ("-voted_date",)
 
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 admin.site.register(Restaurant, RestaurantAdmin)
 admin.site.register(Menu, MenuAdmin)
