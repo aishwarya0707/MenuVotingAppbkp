@@ -11,9 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
     Handles the serialization and deserialization of user data.
     """
 
-    password = serializers.CharField(
-        write_only=True
-    )  # Password field is write-only to ensure security
+    password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
@@ -21,12 +19,8 @@ class UserSerializer(serializers.ModelSerializer):
             "username",
             "email",
             "password",
-        ]  # Fields included in the serialized data
-        extra_kwargs = {
-            "password": {
-                "write_only": True
-            }  # Ensure password is not readable from serialized data
-        }
+        ]
+        extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
         """
@@ -35,9 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             username=validated_data["username"],
             email=validated_data["email"],
-            password=validated_data[
-                "password"
-            ],  # Use create_user to handle password hashing
+            password=validated_data["password"],
         )
         return user
 
@@ -48,8 +40,8 @@ class LoginSerializer(serializers.Serializer):
     Handles validation of user credentials for login.
     """
 
-    username = serializers.CharField()  # Username field
-    password = serializers.CharField()  # Password field
+    username = serializers.CharField()
+    password = serializers.CharField()
 
     def validate(self, data):
         """
@@ -57,10 +49,8 @@ class LoginSerializer(serializers.Serializer):
         """
         user = authenticate(username=data["username"], password=data["password"])
         if user and user.is_active:
-            return user  # Return the authenticated user
-        raise serializers.ValidationError(
-            "Invalid credentials"
-        )  # Raise an error if authentication fails
+            return user
+        raise serializers.ValidationError("Invalid credentials")
 
 
 class LogoutSerializer(serializers.Serializer):
@@ -69,8 +59,8 @@ class LogoutSerializer(serializers.Serializer):
     Used to validate the data provided for logout (though not directly used here).
     """
 
-    username = serializers.CharField()  # Username field for identifying the user
-    password = serializers.CharField(write_only=True)  # Password field is write-only
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -79,7 +69,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
     Handles serialization and deserialization of employee data.
     """
 
-    user = UserSerializer()  # Nested serializer for user data
+    user = UserSerializer()
 
     class Meta:
         model = Employee
@@ -89,4 +79,4 @@ class EmployeeSerializer(serializers.ModelSerializer):
             "job_title",
             "date_of_joining",
             "department",
-        ]  # Fields included in the serialized data
+        ]

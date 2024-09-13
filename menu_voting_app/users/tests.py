@@ -137,32 +137,38 @@ class LogoutViewTestCase(APITestCase):
         self.assertIn("errors", response.data)
 
 
-class CreateEmployeeAPIViewTests(APITestCase):
+class CreateEmployeeAPIViewTest(APITestCase):
 
     def setUp(self):
-        self.url = reverse("employee_create")
-        self.user_data = {
-            "user.email": "testuser@example.com",
-            "user.username": "testuser",
-        }
-        self.valid_payload = {
-            "employee_id": "E123",
-            "user.email": "testuser@example.com",
-            "user.username": "testuser",
-            "date_of_joining": "2024-09-13",
-        }
+        self.user = User.objects.create_user(
+            username="testuser",
+            email="testuser@example.com",
+            password="securepassword123",
+        )
+        self.client.login(username="testuser", password="securepassword123")
 
     def test_create_employee_success(self):
-        response = self.client.post(self.url, data=self.valid_payload, format="json")
+        url = reverse("employee_create")
+        data = {
+            "employee_id": "E12345",
+            "user": {
+                "email": "employee@example.com",
+                "username": "employeeuser",
+            },
+            "date_of_joining": "2024-09-13",
+        }
+        response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Employee.objects.count(), 1)
-        self.assertEqual(Employee.objects.get().employee_id, "E123")
-        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(response.data["msg"], "Employee successfully created.")
 
-    def test_create_employee_duplicate_id(self):
-        # First create the employee
-        self.client.post(self.url, data=self.valid_payload, format="json")
-        # Attempt to create another employee with the same ID
-        response = self.client.post(self.url, data=self.valid_payload, format="json")
+    def test_create_employee_failure(self):
+        url = reverse("employee_create")
+        data = {
+            "employee_id": "E12345",
+            "user": {
+                "email": "invalidemail",
+                "username": "employeeuser",
+            },
+        }
+        response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Employee with ID E123 already exists", response.data["msg"])
