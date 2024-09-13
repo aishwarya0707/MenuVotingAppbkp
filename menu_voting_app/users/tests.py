@@ -3,10 +3,12 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from .models import Employee
+
 
 class RegisterViewTests(APITestCase):
     def setUp(self):
-        self.url = reverse("register")  # Adjust the URL name as needed
+        self.url = reverse("register")
 
     def test_register_user_success(self):
         """
@@ -70,7 +72,7 @@ class RegisterViewTests(APITestCase):
 
 class LoginViewTests(APITestCase):
     def setUp(self):
-        self.url = reverse("login")  # Adjust the URL name as needed
+        self.url = reverse("login")
         self.user = User.objects.create_user(
             username="testuser", password="testpassword", email="testuser@example.com"
         )
@@ -112,16 +114,17 @@ class LogoutViewTestCase(APITestCase):
         Create a user for testing and perform initial setup.
         """
         self.user = User.objects.create_user(
-            username='testuser',
-            password='testpassword'
+            username="testuser", password="testpassword"
         )
-        self.client.login(username='testuser', password='testpassword')
+        self.client.login(username="testuser", password="testpassword")
 
     def test_logout_success(self):
         """
         Test successful logout scenario.
         """
-        response = self.client.post(reverse('logout'),data={"username":'testuser', "password":'testpassword'})
+        response = self.client.post(
+            reverse("logout"), data={"username": "testuser", "password": "testpassword"}
+        )
         self.assertEqual(response.data, {"message": "Successfully logged out."})
 
     def test_logout_invalid_data(self):
@@ -129,7 +132,37 @@ class LogoutViewTestCase(APITestCase):
         Test logout with invalid data.
         """
         # Modify the serializer to expect invalid data if needed
-        response = self.client.post(reverse('logout'), data={'invalid_field': 'value'})
+        response = self.client.post(reverse("logout"), data={"invalid_field": "value"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('errors', response.data)
+        self.assertIn("errors", response.data)
 
+
+class CreateEmployeeAPIViewTests(APITestCase):
+
+    def setUp(self):
+        self.url = reverse("employee_create")
+        self.user_data = {
+            "user.email": "testuser@example.com",
+            "user.username": "testuser",
+        }
+        self.valid_payload = {
+            "employee_id": "E123",
+            "user.email": "testuser@example.com",
+            "user.username": "testuser",
+            "date_of_joining": "2024-09-13",
+        }
+
+    def test_create_employee_success(self):
+        response = self.client.post(self.url, data=self.valid_payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Employee.objects.count(), 1)
+        self.assertEqual(Employee.objects.get().employee_id, "E123")
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_create_employee_duplicate_id(self):
+        # First create the employee
+        self.client.post(self.url, data=self.valid_payload, format="json")
+        # Attempt to create another employee with the same ID
+        response = self.client.post(self.url, data=self.valid_payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Employee with ID E123 already exists", response.data["msg"])

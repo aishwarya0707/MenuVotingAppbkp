@@ -7,12 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Employee
-from .serializers import (
-    EmployeeSerializer,
-    LoginSerializer,
-    LogoutSerializer,
-    UserSerializer,
-)
+from .serializers import (EmployeeSerializer, LoginSerializer,
+                          LogoutSerializer, UserSerializer)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -103,11 +99,11 @@ class LogoutView(generics.CreateAPIView):
             )
 
 
-class CreateEmployeeAPIView(APIView):
-    # serializer_class = EmployeeSerializer
+class CreateEmployeeAPIView(generics.CreateAPIView):
+    serializer_class = EmployeeSerializer
+
     def post(self, request):
         data = request.data
-        print(data)
         # Check if employee with the given ID already exists
         employee_id = data.get("employee_id")
         if employee_id and Employee.objects.filter(employee_id=employee_id).exists():
@@ -117,9 +113,9 @@ class CreateEmployeeAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user_data = data.get("user")
-        email = user_data.get("email")
-        username = user_data.get("username")
+        # user_data = data.get("user")
+        email = data.get("user.email")
+        username = data.get("user.username")
         user_profile, created = User.objects.get_or_create(
             email=email, username=username
         )
@@ -130,7 +126,7 @@ class CreateEmployeeAPIView(APIView):
             employee = Employee.objects.create(
                 employee_id=employee_id,
                 user=user_profile,
-                date_of_joining=data.get("date_of_joining")
+                date_of_joining=data.get("date_of_joining"),
             )
         except Exception as e:
             error_message = f"Failed to create employee: {str(e)}"

@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APIClient, APITestCase
+from rest_framework.test import APITestCase
 
 from users.models import Employee
 
@@ -14,7 +14,7 @@ from .serializers import MenuSerializer
 
 class RestaurantCreateViewTests(APITestCase):
     def setUp(self):
-        self.url = reverse("restaurant-create")  # Adjust the URL name as needed
+        self.url = reverse("restaurant-create")
 
     def test_create_restaurant_success(self):
         """
@@ -80,7 +80,7 @@ class RestaurantCreateViewTests(APITestCase):
 
 class MenuCreateViewTests(APITestCase):
     def setUp(self):
-        self.url = reverse("menu-create")  # Adjust the URL name as needed
+        self.url = reverse("menu-create")
         self.restaurant = Restaurant.objects.create(
             name="Test Restaurant",
             address="123 Test Street",

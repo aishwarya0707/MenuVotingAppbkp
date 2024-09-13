@@ -5,12 +5,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from .models import Menu, Restaurant, Vote
-from .serializers import (
-    MenuSerializer,
-    RestaurantSerializer,
-    VoteRequestSerializer,
-    VoteSerializer,
-)
+from .serializers import (MenuSerializer, RestaurantSerializer,
+                          VoteRequestSerializer, VoteSerializer)
 
 
 class RestaurantCreateView(generics.CreateAPIView):
@@ -156,6 +152,7 @@ class MenuDetailView(generics.ListAPIView):
             return (
                 Menu.objects.none()
             )  # Return an empty queryset in case of any exceptions.
+
 
 class VoteMenuAPIView(generics.CreateAPIView):
     versioning_class = (

@@ -1,15 +1,13 @@
 from django.urls import path
 
 from .views import MenuCreateView  # View for uploading new menu items
-from .views import (
-    MenuDetailView,
-)  # View for retrieving menu details for the current day
-from .views import MenuListView  # View for listing menus for a specific restaurant
+from .views import \
+    MenuListView  # View for listing menus for a specific restaurant
 from .views import RestaurantCreateView  # View for creating new restaurants
-from .views import VoteMenuAPIView  # View for creating or submitting votes for menus
-from .views import (
-    VoteResultsForCurrentDayAPIView,
-)  # View for retrieving vote results for the current day
+from .views import \
+    VoteMenuAPIView  # View for creating or submitting votes for menus
+from .views import (  # View for retrieving menu details for the current day; View for retrieving vote results for the current day
+    MenuDetailView, VoteResultsForCurrentDayAPIView)
 
 urlpatterns = [
     # URL pattern for creating a new restaurant
