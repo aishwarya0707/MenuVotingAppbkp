@@ -11,8 +11,8 @@ class RestaurantSerializer(serializers.ModelSerializer):
     """
 
     class Meta:
-        model = Restaurant  # Specifies the model this serializer is associated with.
-        fields = "__all__"  # Include all fields of the Restaurant model in the serialization.
+        model = Restaurant 
+        fields = "__all__"
 
 
 class MenuSerializer(serializers.ModelSerializer):
@@ -21,7 +21,7 @@ class MenuSerializer(serializers.ModelSerializer):
     """
 
     class Meta:
-        model = Menu  # Specifies the model this serializer is associated with.
+        model = Menu 
         fields = ["id", "restaurant", "items", "date", "votes"]
 
 
