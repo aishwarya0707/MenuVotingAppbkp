@@ -1,14 +1,5 @@
 from django.contrib import admin
-
-# Register your models here.
 from .models import Menu, Restaurant, Vote
-
-# Register your models here.
-
-# Register your models here.
-# admin.site.register(Restaurant)
-# admin.site.register(Menu)
-
 
 class RestaurantAdmin(admin.ModelAdmin):
 
